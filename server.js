@@ -164,7 +164,7 @@ async function updateUsbStatus(forceTest = false) {
     }
 }
 
-// Watch for USB mount/unmount in macOS
+// Watch for USB mount/unmount
 const osType = process.platform;
 if (osType === 'darwin') {
     console.log('Setting up real-time USB detection for macOS on /Volumes...');
@@ -176,7 +176,19 @@ if (osType === 'darwin') {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             console.log(`Detected change in volumes: ${event} ${path}`);
-            // Do not force test on auto-detect, rely on cache if available
+            updateUsbStatus(false);
+        }, 1000); 
+    });
+} else if (osType === 'linux') {
+    console.log('Setting up real-time USB detection for Linux on /media and /mnt...');
+    let timeout;
+    chokidar.watch(['/media', '/mnt'], { 
+        depth: 2, // /media/username/USB-NAME
+        ignoreInitial: true 
+    }).on('all', (event, path) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            console.log(`Detected change in mounts: ${event} ${path}`);
             updateUsbStatus(false);
         }, 1000); 
     });
