@@ -11,7 +11,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = 3000;
+// Configure port via environment variable or command line argument (e.g., `node server.js 8080`)
+const PORT = process.env.PORT || process.argv[2] || 3000;
 const CACHE_FILE = path.join(__dirname, 'usb-cache.json');
 
 app.use(express.static('public'));
