@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USB Speed Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <main class="container">
+        <header>
+            <div class="title-group">
+                <h1>USB Speed Monitor</h1>
+                <p class="subtitle">Real-time Read & Write Performance</p>
+            </div>
+            <button id="refreshBtn" class="refresh-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l5.67-5.67"/>
+                </svg>
+                Refresh Now
+            </button>
+        </header>
+
+        <div id="loading" class="loading-state hidden">
+            <div class="spinner"></div>
+            <p>Testing drive speed...</p>
+        </div>
+
+        <div id="usb-container" class="usb-grid">
+            <!-- USB Cards will be injected here -->
+        </div>
+
+        <div id="empty-state" class="empty-state">
+            <div class="icon">🔌</div>
+            <h2>No USB Drives Detected</h2>
+            <p>Please insert a USB drive and click refresh.</p>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
