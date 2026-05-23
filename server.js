@@ -6,6 +6,9 @@ const http = require('http');
 const socketIo = require('socket.io');
 const chokidar = require('chokidar');
 const drivelist = require('drivelist');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 const app = express();
 const server = http.createServer(app);
@@ -42,17 +45,44 @@ function saveCache(cache) {
     }
 }
 
-async function testDriveSpeed(mountPath) {
+async function testDriveSpeed(mountPath, device) {
     const testFileSize = 50 * 1024 * 1024; // 50MB
     const tempFile = path.join(mountPath, 'speedtest.tmp');
     
     let writeSpeed = 0;
     let readSpeed = 0;
     
+    // --- READ TEST via `dd` (Raw Block Device) ---
+    // This allows testing read speed even if the drive is mounted as Read-Only.
+    try {
+        console.log(`Testing read speed on block device ${device} using dd...`);
+        // We read 50MB (bs=10M count=5) to get a quick benchmark.
+        // On Linux, iflag=direct bypasses cache for more accurate hardware speed.
+        const ddFlags = process.platform === 'linux' ? 'iflag=direct' : '';
+        const { stderr } = await execAsync(`dd if=${device} of=/dev/null bs=10M count=5 ${ddFlags}`);
+        
+        // Output format varies, but usually ends with something like: "..., 1.234 s, 42.5 MB/s"
+        const speedMatch = stderr.match(/,\s*([0-9.]+)\s*(MB\/s|GB\/s|kB\/s|B\/s)/i);
+        if (speedMatch) {
+            let speedVal = parseFloat(speedMatch[1]);
+            const unit = speedMatch[2].toUpperCase();
+            // Convert everything to MB/s
+            if (unit === 'GB/S') speedVal *= 1024;
+            if (unit === 'KB/S') speedVal /= 1024;
+            if (unit === 'B/S') speedVal /= (1024 * 1024);
+            readSpeed = speedVal;
+        } else {
+            console.log("Could not parse dd output:", stderr);
+        }
+    } catch (e) {
+        console.error(`dd read test failed on ${device}:`, e.message);
+        // We will fallback to 0.00 if dd fails
+    }
+    
+    // --- WRITE TEST via File System ---
     try {
         const buffer = crypto.randomBytes(testFileSize);
         
-        // Write Test
         const startWrite = process.hrtime.bigint();
         fs.writeFileSync(tempFile, buffer);
         const endWrite = process.hrtime.bigint();
@@ -60,17 +90,8 @@ async function testDriveSpeed(mountPath) {
         const writeTimeSec = Number(endWrite - startWrite) / 1e9;
         writeSpeed = (testFileSize / 1024 / 1024) / writeTimeSec;
         
-        // Read Test
-        const startRead = process.hrtime.bigint();
-        fs.readFileSync(tempFile);
-        const endRead = process.hrtime.bigint();
-        
-        const readTimeSec = Number(endRead - startRead) / 1e9;
-        readSpeed = (testFileSize / 1024 / 1024) / readTimeSec;
-        
     } catch (e) {
-        console.error(`Failed to test speed on ${mountPath}:`, e.message);
-        // If it's a read-only file system, we can't test it this way
+        console.error(`Failed to test write speed on ${mountPath}:`, e.message);
     } finally {
         if (fs.existsSync(tempFile)) {
             try {
@@ -104,6 +125,7 @@ async function updateUsbStatus(forceTest = false) {
         for (const drive of externalDrives) {
             if (drive.mountpoints && drive.mountpoints.length > 0) {
                 const mountPath = drive.mountpoints[0].path;
+                const device = drive.device;
                 const label = path.basename(mountPath);
                 const capacity = (drive.size / (1024 * 1024 * 1024)).toFixed(2);
                 const name = drive.description || 'USB Drive';
@@ -115,8 +137,8 @@ async function updateUsbStatus(forceTest = false) {
                     console.log(`Using cached speed for ${mountPath}`);
                     speeds = cache[mountPath].speeds;
                 } else {
-                    console.log(`Testing speed for ${mountPath}...`);
-                    speeds = await testDriveSpeed(mountPath);
+                    console.log(`Testing speed for ${mountPath} (${device})...`);
+                    speeds = await testDriveSpeed(mountPath, device);
                     // Update cache
                     cache[mountPath] = {
                         speeds,
