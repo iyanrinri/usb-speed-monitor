@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createUsbCard(drive) {
         const readFormat = formatSpeed(drive.readSpeed);
-        const writeFormat = formatSpeed(drive.writeSpeed);
         
         return `
             <div class="usb-card">
@@ -50,10 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="metric-box">
                         <div class="metric-label">Read Speed</div>
                         <div class="metric-value">${readFormat.value} <span class="metric-unit">${readFormat.unit}</span></div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">Write Speed</div>
-                        <div class="metric-value">${writeFormat.value} <span class="metric-unit">${writeFormat.unit}</span></div>
                     </div>
                 </div>
 

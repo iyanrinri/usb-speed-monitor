@@ -6,9 +6,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const chokidar = require('chokidar');
 const drivelist = require('drivelist');
-const { exec } = require('child_process');
-const util = require('util');
-const execAsync = util.promisify(exec);
 
 const app = express();
 const server = http.createServer(app);
@@ -52,31 +49,23 @@ async function testDriveSpeed(mountPath, device) {
     let writeSpeed = 0;
     let readSpeed = 0;
     
-    // --- READ TEST via `dd` (Raw Block Device) ---
-    // This allows testing read speed even if the drive is mounted as Read-Only.
+    // --- READ TEST via Raw Block Device (Node.js fs) ---
+    // Instead of `dd`, we use native Node.js `fs` to read the raw device directly
     try {
-        console.log(`Testing read speed on block device ${device} using dd...`);
-        // We read 50MB (bs=10M count=5) to get a quick benchmark.
-        // On Linux, iflag=direct bypasses cache for more accurate hardware speed.
-        const ddFlags = process.platform === 'linux' ? 'iflag=direct' : '';
-        const { stderr } = await execAsync(`dd if=${device} of=/dev/null bs=10M count=5 ${ddFlags}`);
+        console.log(`Testing read speed on block device ${device} using fs...`);
+        const fd = fs.openSync(device, 'r');
+        const readBuffer = Buffer.alloc(testFileSize);
         
-        // Output format varies, but usually ends with something like: "..., 1.234 s, 42.5 MB/s"
-        const speedMatch = stderr.match(/,\s*([0-9.]+)\s*(MB\/s|GB\/s|kB\/s|B\/s)/i);
-        if (speedMatch) {
-            let speedVal = parseFloat(speedMatch[1]);
-            const unit = speedMatch[2].toUpperCase();
-            // Convert everything to MB/s
-            if (unit === 'GB/S') speedVal *= 1024;
-            if (unit === 'KB/S') speedVal /= 1024;
-            if (unit === 'B/S') speedVal /= (1024 * 1024);
-            readSpeed = speedVal;
-        } else {
-            console.log("Could not parse dd output:", stderr);
-        }
+        const startRead = process.hrtime.bigint();
+        fs.readSync(fd, readBuffer, 0, testFileSize, 0);
+        const endRead = process.hrtime.bigint();
+        
+        fs.closeSync(fd);
+        
+        const readTimeSec = Number(endRead - startRead) / 1e9;
+        readSpeed = (testFileSize / 1024 / 1024) / readTimeSec;
     } catch (e) {
-        console.error(`dd read test failed on ${device}:`, e.message);
-        // We will fallback to 0.00 if dd fails
+        console.error(`fs read block device failed on ${device}:`, e.message);
     }
     
     // --- WRITE TEST via File System ---
