@@ -48,18 +48,19 @@ function saveCache(cache) {
 async function testDriveSpeed(mountPath, device) {
     const testFileSize = 50 * 1024 * 1024; // 50MB
     const tempFile = path.join(mountPath, 'speedtest.tmp');
-    
+
     let writeSpeed = 0;
     let readSpeed = 0;
-    
+
     // --- READ TEST via `dd` (Raw Block Device) ---
     // This allows testing read speed even if the drive is mounted as Read-Only.
     // Only use `dd` on Linux because macOS will throw "Permission Denied" without sudo.
     if (process.platform === 'linux') {
         try {
-            console.log(`Testing read speed on block device ${device} using dd...`);
-            const { stderr } = await execAsync(`dd if=${device} of=/dev/null bs=10M count=5 iflag=direct`);
-            
+            const command = `dd if=${device} of=/dev/null bs=10M count=5 iflag=direct`
+            console.log(`Testing read speed on block device ${device} using ${command}...`);
+            const { stderr } = await execAsync(command);
+
             // Output format varies, but usually ends with something like: "..., 1.234 s, 42.5 MB/s"
             const speedMatch = stderr.match(/,\s*([0-9.]+)\s*(MB\/s|GB\/s|kB\/s|B\/s)/i);
             if (speedMatch) {
@@ -78,38 +79,38 @@ async function testDriveSpeed(mountPath, device) {
             // We will fallback to 0.00 if dd fails
         }
     }
-    
+
     // --- WRITE & READ TEST via File System ---
     try {
         const buffer = crypto.randomBytes(testFileSize);
-        
+
         const startWrite = process.hrtime.bigint();
         fs.writeFileSync(tempFile, buffer);
         const endWrite = process.hrtime.bigint();
-        
+
         const writeTimeSec = Number(endWrite - startWrite) / 1e9;
         writeSpeed = (testFileSize / 1024 / 1024) / writeTimeSec;
-        
+
         // If we didn't use `dd` (e.g. on macOS), test read speed from the file we just wrote
         if (process.platform !== 'linux') {
             const startRead = process.hrtime.bigint();
             fs.readFileSync(tempFile);
             const endRead = process.hrtime.bigint();
-            
+
             const readTimeSec = Number(endRead - startRead) / 1e9;
             readSpeed = (testFileSize / 1024 / 1024) / readTimeSec;
         }
-        
+
     } catch (e) {
         console.error(`Failed to test write speed on ${mountPath}:`, e.message);
     } finally {
         if (fs.existsSync(tempFile)) {
             try {
                 fs.unlinkSync(tempFile);
-            } catch (e) {}
+            } catch (e) { }
         }
     }
-    
+
     return {
         writeSpeed: writeSpeed.toFixed(2),
         readSpeed: readSpeed.toFixed(2)
@@ -119,19 +120,19 @@ async function testDriveSpeed(mountPath, device) {
 async function updateUsbStatus(forceTest = false) {
     if (isTesting) return;
     isTesting = true;
-    
+
     const cache = loadCache();
     let hasChanges = false;
-    
+
     // Notify clients that testing is in progress
     io.emit('testing', true);
-    
+
     try {
         const drives = await drivelist.list();
         const externalDrives = drives.filter(d => d.isUSB || d.isRemovable);
-        
+
         const newStatus = [];
-        
+
         for (const drive of externalDrives) {
             if (drive.mountpoints && drive.mountpoints.length > 0) {
                 const mountPath = drive.mountpoints[0].path;
@@ -139,9 +140,9 @@ async function updateUsbStatus(forceTest = false) {
                 const label = path.basename(mountPath);
                 const capacity = (drive.size / (1024 * 1024 * 1024)).toFixed(2);
                 const name = drive.description || 'USB Drive';
-                
+
                 let speeds;
-                
+
                 // Check if we have cached data and we are not forcing a refresh
                 if (!forceTest && cache[mountPath]) {
                     console.log(`Using cached speed for ${mountPath}`);
@@ -156,7 +157,7 @@ async function updateUsbStatus(forceTest = false) {
                     };
                     hasChanges = true;
                 }
-                
+
                 newStatus.push({
                     name,
                     label,
@@ -168,7 +169,7 @@ async function updateUsbStatus(forceTest = false) {
                 });
             }
         }
-        
+
         // Clean up cache: remove any cached drives that are no longer connected
         const currentMountPaths = newStatus.map(d => d.mountPath);
         for (const cachedPath of Object.keys(cache)) {
@@ -178,14 +179,14 @@ async function updateUsbStatus(forceTest = false) {
                 hasChanges = true;
             }
         }
-        
+
         if (hasChanges) {
             saveCache(cache);
         }
-        
+
         usbStatus = newStatus;
         console.log('USB speed test completed.');
-        
+
         // Broadcast new data to all clients
         io.emit('usbStatus', usbStatus);
     } catch (e) {
@@ -201,28 +202,28 @@ const osType = process.platform;
 if (osType === 'darwin') {
     console.log('Setting up real-time USB detection for macOS on /Volumes...');
     let timeout;
-    chokidar.watch('/Volumes', { 
+    chokidar.watch('/Volumes', {
         depth: 0,
-        ignoreInitial: true 
+        ignoreInitial: true
     }).on('all', (event, path) => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             console.log(`Detected change in volumes: ${event} ${path}`);
             updateUsbStatus(false);
-        }, 1000); 
+        }, 1000);
     });
 } else if (osType === 'linux') {
     console.log('Setting up real-time USB detection for Linux on /media and /mnt...');
     let timeout;
-    chokidar.watch(['/media', '/mnt'], { 
+    chokidar.watch(['/media', '/mnt'], {
         depth: 2, // /media/username/USB-NAME
-        ignoreInitial: true 
+        ignoreInitial: true
     }).on('all', (event, path) => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             console.log(`Detected change in mounts: ${event} ${path}`);
             updateUsbStatus(false);
-        }, 1000); 
+        }, 1000);
     });
 }
 
@@ -232,7 +233,7 @@ io.on('connection', (socket) => {
     // Send initial status
     socket.emit('usbStatus', usbStatus);
     socket.emit('testing', isTesting);
-    
+
     socket.on('requestRefresh', () => {
         console.log('Manual refresh requested by client');
         updateUsbStatus(true); // force test
