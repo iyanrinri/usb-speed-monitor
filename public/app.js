@@ -45,8 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createUsbCard(drive) {
         const readFormat = formatSpeed(drive.readSpeed);
-        const writeFormat = formatSpeed(drive.writeSpeed);
-        const estClass = estimateClass(drive.writeSpeed);
+        const estClass = estimateClass(drive.readSpeed);
         
         return `
             <div class="usb-card">
@@ -63,10 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <div class="speed-metrics">
                     <div class="metric-box">
-                        <div class="metric-label">Write Speed</div>
-                        <div class="metric-value">${writeFormat.value} <span class="metric-unit">${writeFormat.unit}</span></div>
-                    </div>
-                    <div class="metric-box">
                         <div class="metric-label">Read Speed</div>
                         <div class="metric-value">${readFormat.value} <span class="metric-unit">${readFormat.unit}</span></div>
                     </div>
@@ -82,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function getSpeedCategory(writeSpeedStr) {
-        let speed = parseFloat(writeSpeedStr);
+    function getSpeedCategory(readSpeedStr) {
+        let speed = parseFloat(readSpeedStr);
         if (speed >= 60) return 'fast';
         if (speed >= 10) return 'normal';
         return 'slow';
@@ -103,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             drives.forEach(drive => {
-                groups[getSpeedCategory(drive.writeSpeed)].push(drive);
+                groups[getSpeedCategory(drive.readSpeed)].push(drive);
             });
 
             let html = '';
