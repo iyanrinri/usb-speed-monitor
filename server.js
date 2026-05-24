@@ -130,44 +130,54 @@ async function updateUsbStatus(forceTest = false) {
     try {
         const drives = await drivelist.list();
         const externalDrives = drives.filter(d => d.isUSB || d.isRemovable);
+        const drivesToTest = externalDrives.filter(d => d.mountpoints && d.mountpoints.length > 0);
+
+        const totalDrives = drivesToTest.length;
+        let completedDrives = 0;
+
+        io.emit('testing_progress', { completed: completedDrives, total: totalDrives });
 
         const newStatus = [];
 
-        for (const drive of externalDrives) {
-            if (drive.mountpoints && drive.mountpoints.length > 0) {
-                const mountPath = drive.mountpoints[0].path;
-                const device = drive.device;
-                const label = path.basename(mountPath);
-                const capacity = (drive.size / (1024 * 1024 * 1024)).toFixed(2);
-                const name = drive.description || 'USB Drive';
+        for (const drive of drivesToTest) {
+            const mountPath = drive.mountpoints[0].path;
+            const device = drive.device;
+            const label = path.basename(mountPath);
+            const capacity = (drive.size / (1024 * 1024 * 1024)).toFixed(2);
+            const name = drive.description || 'USB Drive';
 
-                let speeds;
+            let speeds;
 
-                // Check if we have cached data and we are not forcing a refresh
-                if (!forceTest && cache[mountPath]) {
-                    console.log(`Using cached speed for ${mountPath}`);
-                    speeds = cache[mountPath].speeds;
-                } else {
-                    console.log(`Testing speed for ${mountPath} (${device})...`);
-                    speeds = await testDriveSpeed(mountPath, device);
-                    // Update cache
-                    cache[mountPath] = {
-                        speeds,
-                        lastTested: new Date().toISOString()
-                    };
-                    hasChanges = true;
-                }
-
-                newStatus.push({
-                    name,
-                    label,
-                    mountPath,
-                    capacity: `${capacity} GB`,
-                    writeSpeed: speeds.writeSpeed,
-                    readSpeed: speeds.readSpeed,
-                    lastUpdated: cache[mountPath].lastTested
-                });
+            // Check if we have cached data and we are not forcing a refresh
+            if (!forceTest && cache[mountPath]) {
+                console.log(`Using cached speed for ${mountPath}`);
+                speeds = cache[mountPath].speeds;
+            } else {
+                console.log(`Testing speed for ${mountPath} (${device})...`);
+                speeds = await testDriveSpeed(mountPath, device);
+                // Update cache
+                cache[mountPath] = {
+                    speeds,
+                    lastTested: new Date().toISOString()
+                };
+                hasChanges = true;
             }
+
+            newStatus.push({
+                name,
+                label,
+                mountPath,
+                capacity: `${capacity} GB`,
+                writeSpeed: speeds.writeSpeed,
+                readSpeed: speeds.readSpeed,
+                lastUpdated: cache[mountPath].lastTested
+            });
+
+            completedDrives++;
+            io.emit('testing_progress', { completed: completedDrives, total: totalDrives });
+            
+            // Broadcast data progressively to clients
+            io.emit('usbStatus', newStatus);
         }
 
         // Clean up cache: remove any cached drives that are no longer connected
@@ -187,8 +197,6 @@ async function updateUsbStatus(forceTest = false) {
         usbStatus = newStatus;
         console.log('USB speed test completed.');
 
-        // Broadcast new data to all clients
-        io.emit('usbStatus', usbStatus);
     } catch (e) {
         console.error('Error updating USB status:', e);
     } finally {

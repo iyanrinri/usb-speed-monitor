@@ -90,6 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
             refreshBtn.classList.remove('spinning');
             refreshBtn.disabled = false;
             loadingState.classList.add('hidden');
+            const progressEl = document.getElementById('loading-progress');
+            if (progressEl) progressEl.textContent = '';
+        }
+    });
+
+    socket.on('testing_progress', (data) => {
+        const progressEl = document.getElementById('loading-progress');
+        if (progressEl) {
+            progressEl.textContent = `${data.completed} / ${data.total} completed`;
         }
     });
 
