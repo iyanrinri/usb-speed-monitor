@@ -57,7 +57,7 @@ async function testDriveSpeed(mountPath, device) {
     // Only use `dd` on Linux because macOS will throw "Permission Denied" without sudo.
     if (process.platform === 'linux') {
         try {
-            const command = `dd if=${device} of=/dev/null bs=10M count=5 iflag=direct`
+            const command = `dd if=${device} of=/dev/null bs=100M count=5 iflag=direct`
             console.log(`Testing read speed on block device ${device} using ${command}...`);
             const { stderr } = await execAsync(command);
 
