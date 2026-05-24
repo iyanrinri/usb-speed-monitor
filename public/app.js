@@ -32,8 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return { value: speed.toFixed(2), unit: 'MB/s' };
     }
 
+    function estimateClass(writeSpeedStr) {
+        let speed = parseFloat(writeSpeedStr);
+        if (speed >= 90) return 'Est. V90';
+        if (speed >= 60) return 'Est. V60';
+        if (speed >= 30) return 'Est. U3 / V30';
+        if (speed >= 10) return 'Est. Class 10 / U1';
+        if (speed >= 6) return 'Est. Class 6';
+        if (speed >= 4) return 'Est. Class 4';
+        return 'Est. Class 2';
+    }
+
     function createUsbCard(drive) {
         const readFormat = formatSpeed(drive.readSpeed);
+        const writeFormat = formatSpeed(drive.writeSpeed);
+        const estClass = estimateClass(drive.writeSpeed);
         
         return `
             <div class="usb-card">
@@ -42,10 +55,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3>${drive.label || drive.name}</h3>
                         <span class="drive-path">${drive.name}</span>
                     </div>
-                    <div class="capacity-badge">${drive.capacity}</div>
+                    <div class="badges-group" style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                        <div class="capacity-badge">${drive.capacity}</div>
+                        <div class="class-badge" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-color); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.2); white-space: nowrap;">${estClass}</div>
+                    </div>
                 </div>
                 
                 <div class="speed-metrics">
+                    <div class="metric-box">
+                        <div class="metric-label">Write Speed</div>
+                        <div class="metric-value">${writeFormat.value} <span class="metric-unit">${writeFormat.unit}</span></div>
+                    </div>
                     <div class="metric-box">
                         <div class="metric-label">Read Speed</div>
                         <div class="metric-value">${readFormat.value} <span class="metric-unit">${readFormat.unit}</span></div>
@@ -62,13 +82,72 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    function getSpeedCategory(writeSpeedStr) {
+        let speed = parseFloat(writeSpeedStr);
+        if (speed >= 60) return 'fast';
+        if (speed >= 10) return 'normal';
+        return 'slow';
+    }
+
     function renderDrives(drives) {
         if (!drives || drives.length === 0) {
             usbContainer.innerHTML = '';
             emptyState.classList.remove('hidden');
         } else {
             emptyState.classList.add('hidden');
-            usbContainer.innerHTML = drives.map(createUsbCard).join('');
+            
+            const groups = {
+                fast: [],
+                normal: [],
+                slow: []
+            };
+
+            drives.forEach(drive => {
+                groups[getSpeedCategory(drive.writeSpeed)].push(drive);
+            });
+
+            let html = '';
+
+            if (groups.fast.length > 0) {
+                html += `
+                    <div class="speed-group">
+                        <h2 class="group-title" style="color: var(--success); margin: 2rem 0 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">
+                            🚀 Fast Speed Detected (≥ 60 MB/s)
+                        </h2>
+                        <div class="usb-grid">
+                            ${groups.fast.map(createUsbCard).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (groups.normal.length > 0) {
+                html += `
+                    <div class="speed-group">
+                        <h2 class="group-title" style="color: #3b82f6; margin: 2rem 0 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">
+                            ✅ Normal Speed (10 - 59 MB/s)
+                        </h2>
+                        <div class="usb-grid">
+                            ${groups.normal.map(createUsbCard).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (groups.slow.length > 0) {
+                html += `
+                    <div class="speed-group">
+                        <h2 class="group-title" style="color: #ef4444; margin: 2rem 0 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">
+                            🐢 Slow Speed Detected (< 10 MB/s)
+                        </h2>
+                        <div class="usb-grid">
+                            ${groups.slow.map(createUsbCard).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            usbContainer.innerHTML = html;
         }
     }
 

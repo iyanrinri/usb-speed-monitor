@@ -27,21 +27,27 @@
             </button>
         </header>
 
+        <div class="speed-reference-strip">
+            <span class="ref-label">Speed Reference (Min Write):</span>
+            <span class="ref-badge">Class 4/6: <b>4-6 MB/s</b></span>
+            <span class="ref-badge">Class 10/U1: <b>10 MB/s</b></span>
+            <span class="ref-badge">U3/V30: <b>30 MB/s</b></span>
+            <span class="ref-badge">V60: <b>60 MB/s</b></span>
+            <span class="ref-badge">V90: <b>90 MB/s</b></span>
+        </div>
+
         <div id="loading" class="loading-state hidden">
             <div class="spinner"></div>
             <p>Testing drive speed...</p>
             <p id="loading-progress" style="font-weight: 600; margin-top: 8px;"></p>
         </div>
 
-        <div id="usb-container" class="usb-grid">
+        <div id="usb-container">
             <!-- USB Cards will be injected here -->
         </div>
 
         <div id="empty-state" class="empty-state">
             <div class="icon">🔌</div>
-            <h2>No USB Drives Detected</h2>
-            <p>Please insert a USB drive and click refresh.</p>
-        </div>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
