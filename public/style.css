@@ -131,6 +131,47 @@ header {
     100% { transform: rotate(360deg); }
 }
 
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+}
+
+.search-input {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    outline: none;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    width: 250px;
+}
+
+.search-input:focus {
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+}
+
 /* Glassmorphism Cards */
 .usb-grid {
     display: grid;

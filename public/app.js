@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyState = document.getElementById('empty-state');
     const loadingState = document.getElementById('loading');
     const refreshBtn = document.getElementById('refreshBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    let allDrives = [];
 
     // Time ago formatter
     function timeSince(date) {
@@ -148,8 +151,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Socket listeners
     socket.on('usbStatus', (drives) => {
-        renderDrives(drives);
+        allDrives = drives;
+        applySearchFilter();
     });
+
+    searchInput.addEventListener('input', () => {
+        applySearchFilter();
+    });
+
+    function applySearchFilter() {
+        if (!searchInput) return;
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredDrives = allDrives.filter(drive => {
+            const label = (drive.label || '').toLowerCase();
+            const name = (drive.name || '').toLowerCase();
+            return label.includes(searchTerm) || name.includes(searchTerm);
+        });
+        renderDrives(filteredDrives);
+    }
 
     socket.on('testing', (isTesting) => {
         if (isTesting) {
