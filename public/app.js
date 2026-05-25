@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getSpeedCategory(readSpeedStr) {
         let speed = parseFloat(readSpeedStr);
         if (speed >= 60) return 'fast';
-        if (speed >= 10) return 'normal';
+        if (speed > 30) return 'normal';
         return 'slow';
     }
 
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += `
                     <div class="speed-group">
                         <h2 class="group-title" style="color: #3b82f6; margin: 2rem 0 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">
-                            ✅ Normal Speed (10 - 59 MB/s)
+                            ✅ Normal Speed (> 30 - 59 MB/s)
                         </h2>
                         <div class="usb-grid">
                             ${groups.normal.map(createUsbCard).join('')}
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += `
                     <div class="speed-group">
                         <h2 class="group-title" style="color: #ef4444; margin: 2rem 0 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">
-                            🐢 Slow Speed Detected (< 10 MB/s)
+                            🐢 Slow Speed Detected (≤ 30 MB/s)
                         </h2>
                         <div class="usb-grid">
                             ${groups.slow.map(createUsbCard).join('')}
