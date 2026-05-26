@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="badges-group" style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
                         <div class="capacity-badge">${drive.capacity}</div>
-                        <div class="class-badge" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-color); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.2); white-space: nowrap;">${estClass}</div>
+                        <div class="class-badge" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-color); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.6rem; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.2); white-space: nowrap;">${estClass}</div>
                     </div>
                 </div>
                 
