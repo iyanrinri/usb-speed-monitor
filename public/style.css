@@ -175,15 +175,16 @@ header {
 /* Glassmorphism Cards */
 .usb-grid {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem;
 }
 
 .usb-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.4rem;
+    font-size: 0.85rem;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -209,9 +210,9 @@ header {
 }
 
 .usb-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-4px);
     border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .usb-card:hover::before {
@@ -222,31 +223,31 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     border-bottom: 1px solid var(--card-border);
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
 }
 
 .drive-info {
     overflow: hidden;
-    padding-right: 0.25rem;
+    padding-right: 0.15rem;
 }
 
 .drive-info h3 {
-    font-size: 0.85rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.1rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .drive-path {
-    font-size: 0.65rem;
+    font-size: 0.5rem;
     color: var(--text-secondary);
     background: rgba(0, 0, 0, 0.3);
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
+    padding: 0.1rem 0.25rem;
+    border-radius: 3px;
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -256,49 +257,50 @@ header {
 .capacity-badge {
     background: rgba(16, 185, 129, 0.1);
     color: var(--success);
-    padding: 0.25rem 0.5rem;
-    border-radius: 16px;
-    font-size: 0.7rem;
+    padding: 0.15rem 0.35rem;
+    border-radius: 10px;
+    font-size: 0.55rem;
     font-weight: 600;
     border: 1px solid rgba(16, 185, 129, 0.2);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .speed-metrics {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
 }
 
 .metric-box {
     flex: 1;
     background: var(--speed-bg);
-    border-radius: 10px;
-    padding: 0.5rem 0.25rem;
+    border-radius: 8px;
+    padding: 0.35rem 0.15rem;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.02);
-    min-width: 0; /* Prevent flex blowout */
+    min-width: 0;
 }
 
 .metric-label {
-    font-size: 0.6rem;
+    font-size: 0.45rem;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.3rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.15rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .metric-value {
-    font-size: 1.1rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .metric-unit {
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -307,18 +309,18 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     color: var(--text-secondary);
 }
 
 .status-dot {
     display: inline-block;
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background-color: var(--success);
     border-radius: 50%;
-    margin-right: 4px;
-    box-shadow: 0 0 10px var(--success);
+    margin-right: 3px;
+    box-shadow: 0 0 8px var(--success);
 }
 
 /* Empty State */
@@ -373,13 +375,13 @@ header {
 /* Responsive */
 @media (max-width: 1800px) {
     .usb-grid {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(8, 1fr);
     }
 }
 
 @media (max-width: 1400px) {
     .usb-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
